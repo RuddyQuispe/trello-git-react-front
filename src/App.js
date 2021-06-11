@@ -39,14 +39,21 @@ function App() {
         ...data.lists,
         [listId]: list
       }
-    })
-    console.log("Auiq yellegue", title, listId, newCardID);
+    });
   };
   const addList = (title) => {
-    // const newListId = uuid();
-    // setData({
-    //   listIds: [...data, newListId]
-    // })
+    const newListId = uuid();
+    setData({
+      listIds: [...data.listIds, newListId],
+      lists: {
+        ...data.lists,
+        [newListId]: {
+          id: newListId,
+          title,
+          cards: []
+        }
+      }
+    });
   };
   return (
     <ContextAPI.Provider value={{ updateListTitle, addCard, addList }}>
