@@ -1,4 +1,3 @@
-import background_image from './images/markus-spiske-unsplash.jpg';
 import { makeStyles } from '@material-ui/core';
 import TrelloList from './components/TrelloList';
 import AddCardorList from './components/AddCardorList';
@@ -6,6 +5,7 @@ import mockData from './mockData'
 import { useState } from 'react';
 import ContextAPI from './ContextAPI';
 import uuid from 'react-uuid';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
 function App() {
   const classes = useStyle();
@@ -55,40 +55,107 @@ function App() {
       }
     });
   };
+
+  const onDragEnd = (result) => {
+    // console.table([result]);
+    let { destination, destination: { droppableId: destdorppableId, index: destIndex }, source: { droppableId: sourcedroppableId, index: sourceIndex }, draggableId, type } = result;
+    console.table([
+      {
+        sourcedroppableId,
+        destdorppableId,
+        draggableId
+      }
+    ]);
+    console.table([
+      {
+        type,
+        sourceIndex,
+        destIndex
+      }
+    ]);
+    if (!destination) {
+      return;
+    }
+    if (type === "list") {
+      let newListIds = data.listIds;
+      // newListIds.splice(data.listIds.indexOf(sourceIndex), 1);
+      // newListIds.splice(data.listIds.indexOf(destIndex), 0, draggableId);
+      newListIds.splice(sourceIndex, 1);
+      newListIds.splice(destIndex, 0, draggableId);
+      return;
+    }
+
+    let sourceList = data.lists[sourcedroppableId];
+    let destinationList = data.lists[destdorppableId];
+    let draggingCard = sourceList.cards.filter((card) => card.id === draggableId)[0];
+    // si va a intercambiar solamente el orden, no de lista
+    if (sourcedroppableId === destdorppableId) {
+      // utilizaremos splice para intercmbia los indices
+      sourceList.cards.splice(sourceIndex, 1);
+      destinationList.cards.splice(destIndex, 0, draggingCard)
+      // actualizaremos setData con los nuevos indices
+      setData({
+        ...data,
+        lists: {
+          ...data.lists,
+          [sourceList.id]: destinationList
+        }
+      })
+    } else {
+      // estamos intercambiando entre una a otra lista
+      sourceList.cards.splice(sourceIndex, 1);
+      destinationList.cards.splice(destIndex, 0, draggingCard);
+      setData({
+        ...data,
+        lists: {
+          ...data.lists,
+          [sourceList.id]: sourceList,
+          [destinationList.id]: destinationList,
+        }
+      })
+    }
+  };
+
   return (
-    <ContextAPI.Provider value={{ updateListTitle, addCard, addList }}>
-      <div className={classes.root}>
-        <div className={classes.container}>
-          {
-            data.listIds.map(listId => {
-              // js
-              const list = data.lists[listId]
-              return <TrelloList
-                list={list}
-                key={listId}
-              />
-            })
-          }
-          <div>
-            <AddCardorList
-              type="list"
-            />
-          </div>
+    <div className={classes.root}>
+      <ContextAPI.Provider value={{ updateListTitle, addCard, addList }}>
+        <div>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="123456" type="list" direction="horizontal">
+              {
+                (provided) => (
+                  <div className={classes.container} ref={provided.innerRef} {...provided.droppableProps}>
+                    {
+                      data.listIds.map((listId, index) => {
+                        // js
+                        const list = data.lists[listId]
+                        return <TrelloList
+                          list={list}
+                          key={listId}
+                          index={index}
+                        />
+                      })
+                    }
+                    <div>
+                      <AddCardorList
+                        type="list"
+                      />
+                    </div>
+                    {provided.placeholder}
+                  </div>
+                )
+              }
+            </Droppable>
+          </DragDropContext>
         </div>
-      </div>
-    </ContextAPI.Provider>
+      </ContextAPI.Provider>
+    </div>
   );
 }
 
 const useStyle = makeStyles(theme => ({
   root: {
     display: 'flex',
-    minheight: "100vh",
-    overflowY: "auto",   // scroll permanente
-    backgroundImage: `url(${background_image})`,
-    backgroundPosition: "center",
-    backgroundSize: "cover",
-    backgroundRepeat: "no-repeat"
   },
   container: {
     display: 'flex',    // horizontal

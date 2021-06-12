@@ -1,27 +1,46 @@
 import { Paper, CssBaseline, makeStyles } from '@material-ui/core';
 import React from 'react'
+import { Draggable, Droppable } from 'react-beautiful-dnd';
 import AddCardorList from './AddCardorList';
 import ListTitle from './ListTitle';
 import TrelloCard from './TrelloCard';
 
-const TrelloList = ({ list }) => {
+const TrelloList = ({ list, index }) => {
     const classes = useStyle();
     return (
-        <Paper className={classes.root}>
-            <CssBaseline />
-            <ListTitle title={list.title} listId={list.id} />
+        <Draggable draggableId={list.id} index={index}>
             {
-                list.cards.map(card =>
-                    <TrelloCard
-                        card={card}
-                        key={card.id}
-                    />
+                (provided) => (
+                    <div {...provided.draggableProps} ref={provided.innerRef}>
+                        <Paper className={classes.root} {...provided.dragHandleProps}>
+                            <CssBaseline />
+                            <ListTitle title={list.title} listId={list.id} />
+                            <Droppable droppableId={list.id}>
+                                {
+                                    (provided) => (
+                                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                                            {
+                                                list.cards.map((card, index) => (
+                                                    <TrelloCard
+                                                        card={card}
+                                                        key={card.id}
+                                                        index={index}
+                                                    />
+                                                ))
+                                            }
+                                            {provided.placeholder}
+                                        </div>
+                                    )
+                                }
+                            </Droppable>
+                            <AddCardorList
+                                type="card" listId={list.id}
+                            />
+                        </Paper>
+                    </div>
                 )
             }
-            <AddCardorList
-                type="card" listId={list.id}
-            />
-        </Paper>
+        </Draggable>
     )
 }
 
