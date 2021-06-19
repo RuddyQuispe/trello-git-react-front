@@ -1,8 +1,9 @@
-import { makeStyles } from '@material-ui/core';
+import { Button, makeStyles } from '@material-ui/core';
+import { Info } from '@material-ui/icons';
 import TrelloList from './components/TrelloList';
 import AddCardorList from './components/AddCardorList';
 import mockData from './mockData'
-import { useState } from 'react';
+import React, { useState } from 'react';
 import ContextAPI from './ContextAPI';
 import uuid from 'react-uuid';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
@@ -13,6 +14,13 @@ function App() {
   const updateListTitle = (updatedTitle, listId) => {
     const list = data.lists[listId];
     list.title = updatedTitle;
+    console.log({
+      ...data,
+      lists: {
+        ...data.lists,
+        [listId]: list
+      }
+    });
     setData({
       ...data,
       lists: {
@@ -33,6 +41,13 @@ function App() {
     // assign new card to list
     const list = data.lists[listId];
     list.cards = [...list.cards, newCard];
+    console.log({
+      ...data,
+      lists: {
+        ...data.lists,
+        [listId]: list
+      }
+    });
     setData({
       ...data,
       lists: {
@@ -43,6 +58,17 @@ function App() {
   };
   const addList = (title) => {
     const newListId = uuid();
+    console.log({
+      listIds: [...data.listIds, newListId],
+      lists: {
+        ...data.lists,
+        [newListId]: {
+          id: newListId,
+          title,
+          cards: []
+        }
+      }
+    });
     setData({
       listIds: [...data.listIds, newListId],
       lists: {
@@ -59,20 +85,6 @@ function App() {
   const onDragEnd = (result) => {
     // console.table([result]);
     let { destination, destination: { droppableId: destdorppableId, index: destIndex }, source: { droppableId: sourcedroppableId, index: sourceIndex }, draggableId, type } = result;
-    console.table([
-      {
-        sourcedroppableId,
-        destdorppableId,
-        draggableId
-      }
-    ]);
-    console.table([
-      {
-        type,
-        sourceIndex,
-        destIndex
-      }
-    ]);
     if (!destination) {
       return;
     }
@@ -84,7 +96,6 @@ function App() {
       newListIds.splice(destIndex, 0, draggableId);
       return;
     }
-
     let sourceList = data.lists[sourcedroppableId];
     let destinationList = data.lists[destdorppableId];
     let draggingCard = sourceList.cards.filter((card) => card.id === draggableId)[0];
@@ -149,6 +160,17 @@ function App() {
           </DragDropContext>
         </div>
       </ContextAPI.Provider>
+      <div className={classes.left}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          className={classes.button}
+          startIcon={<Info />}
+        >
+          Save
+        </Button>
+      </div>
     </div>
   );
 }
@@ -159,6 +181,11 @@ const useStyle = makeStyles(theme => ({
   },
   container: {
     display: 'flex',    // horizontal
+  },
+  left: {
+    position: 'absolute',
+    right: '10%',
+    bottom: '10%'
   }
 }));
 
