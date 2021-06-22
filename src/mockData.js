@@ -2,30 +2,17 @@ const mockData = {
     lists: {
         "01list": {
             id: "01list",
-            title: "to do",
+            title: "Bienvenido a Mi TrelloGit",
             cards: [
                 {
                     id: "01card",
-                    title: "COmprar lechuga"
-                },
-                {
-                    id: "02card",
-                    title: "Comprar tomates"
-                },
-                {
-                    id: "03card",
-                    title: "Comprar pan"
+                    title: "Presiona Refresh ara actualizar los avances de tu repositorio Git"
                 }
             ]
-        },
-        "02list": {
-            id: "02list",
-            title: "In progress",
-            cards: []
         }
     },
     listIds: [
-        "01list", "02list"
+        "01list"
     ]
 };
 

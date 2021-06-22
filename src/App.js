@@ -1,5 +1,5 @@
 import { Button, makeStyles } from '@material-ui/core';
-import { Info } from '@material-ui/icons';
+import { Refresh } from '@material-ui/icons';
 import TrelloList from './components/TrelloList';
 import AddCardorList from './components/AddCardorList';
 import mockData from './mockData'
@@ -7,20 +7,24 @@ import React, { useState } from 'react';
 import ContextAPI from './ContextAPI';
 import uuid from 'react-uuid';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import axios from 'axios';
+
+let flag = false;
+
+function start() {
+  if (!flag) {
+    console.log("objert");
+    flag = true;
+  }
+}
 
 function App() {
+  start();
   const classes = useStyle();
   const [data, setData] = useState(mockData);
   const updateListTitle = (updatedTitle, listId) => {
     const list = data.lists[listId];
     list.title = updatedTitle;
-    console.log({
-      ...data,
-      lists: {
-        ...data.lists,
-        [listId]: list
-      }
-    });
     setData({
       ...data,
       lists: {
@@ -30,24 +34,28 @@ function App() {
     });
   };
 
-  const addCard = (title, listId) => {
+  const addCard = async (title, listId) => {
     // new uuid this card
     let newCardID = uuid();
     // create new card
     const newCard = {
+      listId,
       id: newCardID,
       title,
     };
+    let result = await axios.post('http://localhost:5000/api/card/create', {
+      listId,
+      id: newCardID,
+      title
+    });
+    if (result.status === 200) {
+      alert("success");
+    } else {
+      alert("error to create card")
+    }
     // assign new card to list
     const list = data.lists[listId];
     list.cards = [...list.cards, newCard];
-    console.log({
-      ...data,
-      lists: {
-        ...data.lists,
-        [listId]: list
-      }
-    });
     setData({
       ...data,
       lists: {
@@ -56,7 +64,7 @@ function App() {
       }
     });
   };
-  const addList = (title) => {
+  const addList = async (title) => {
     const newListId = uuid();
     console.log({
       listIds: [...data.listIds, newListId],
@@ -80,6 +88,12 @@ function App() {
         }
       }
     });
+    let result = await axios.post('http://localhost:5000/api/list/create', {
+      listId: newListId,
+      title,
+      cards: []
+    });
+    alert(result.data.status);
   };
 
   const onDragEnd = (result) => {
@@ -127,6 +141,11 @@ function App() {
     }
   };
 
+  const initializeTrello = async () => {
+    let response = await axios.get('http://localhost:5000/api/list/all');
+    setData(response.data);
+  };
+
   return (
     <div className={classes.root}>
       <ContextAPI.Provider value={{ updateListTitle, addCard, addList }}>
@@ -166,9 +185,10 @@ function App() {
           color="primary"
           size="large"
           className={classes.button}
-          startIcon={<Info />}
+          startIcon={<Refresh />}
+          onClick={initializeTrello}
         >
-          Save
+          Refresh Lists
         </Button>
       </div>
     </div>
