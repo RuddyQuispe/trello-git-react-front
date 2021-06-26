@@ -1,5 +1,5 @@
-import { Button, makeStyles } from '@material-ui/core';
-import { Refresh } from '@material-ui/icons';
+import { Button, TextField, makeStyles, Modal, Backdrop, Fade } from '@material-ui/core';
+import { Info, Refresh } from '@material-ui/icons';
 import TrelloList from './components/TrelloList';
 import AddCardorList from './components/AddCardorList';
 import mockData from './mockData'
@@ -9,29 +9,26 @@ import uuid from 'react-uuid';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import axios from 'axios';
 
-let flag = false;
-
-function start() {
-  if (!flag) {
-    console.log("objert");
-    flag = true;
-  }
-}
-
 function App() {
-  start();
+  const host = "localhost";
+  const port = "5000";
+  const hostServer = `https://trello-git-rest-api.herokuapp.com`;
   const classes = useStyle();
   const [data, setData] = useState(mockData);
+  const [ownerRepository, setOwnerRepository] = useState("");
+  const [nameRepository, setNameRepository] = useState("");
+  const [logRepo, setLogRepo] = useState([]);
   const updateListTitle = (updatedTitle, listId) => {
-    const list = data.lists[listId];
-    list.title = updatedTitle;
-    setData({
-      ...data,
-      lists: {
-        ...data.lists,
-        [listId]: list
-      }
-    });
+    //actualiza el titulo de la lista
+    // let list = data.lists[listId];
+    // list.title = updatedTitle;
+    // setData({
+    //   ...data,
+    //   lists: {
+    //     ...data.lists,
+    //     [listId]: list
+    //   }
+    // });
   };
 
   const addCard = async (title, listId) => {
@@ -43,7 +40,7 @@ function App() {
       id: newCardID,
       title,
     };
-    let result = await axios.post('http://localhost:5000/api/card/create', {
+    let result = await axios.post(`${hostServer}/api/card/create`, {
       listId,
       id: newCardID,
       title
@@ -66,17 +63,6 @@ function App() {
   };
   const addList = async (title) => {
     const newListId = uuid();
-    console.log({
-      listIds: [...data.listIds, newListId],
-      lists: {
-        ...data.lists,
-        [newListId]: {
-          id: newListId,
-          title,
-          cards: []
-        }
-      }
-    });
     setData({
       listIds: [...data.listIds, newListId],
       lists: {
@@ -88,7 +74,7 @@ function App() {
         }
       }
     });
-    let result = await axios.post('http://localhost:5000/api/list/create', {
+    let result = await axios.post(`${hostServer}/api/list/create`, {
       listId: newListId,
       title,
       cards: []
@@ -104,8 +90,6 @@ function App() {
     }
     if (type === "list") {
       let newListIds = data.listIds;
-      // newListIds.splice(data.listIds.indexOf(sourceIndex), 1);
-      // newListIds.splice(data.listIds.indexOf(destIndex), 0, draggableId);
       newListIds.splice(sourceIndex, 1);
       newListIds.splice(destIndex, 0, draggableId);
       return;
@@ -142,8 +126,33 @@ function App() {
   };
 
   const initializeTrello = async () => {
-    let response = await axios.get('http://localhost:5000/api/list/all');
-    setData(response.data);
+    if (ownerRepository !== "" || nameRepository !== "") {
+      let response = await axios.post(`${hostServer}/api/card/rearrange`, {
+        user: ownerRepository,
+        repository: nameRepository
+      });
+      setData(response.data);
+    } else {
+      alert("input owner repository and name repository");
+    }
+  };
+
+  // modal
+  const [open, setOpen] = React.useState(false);
+
+  const handleOpen = async () => {
+    if (ownerRepository !== "" || nameRepository !== "") {
+      let response = await axios.get(`${hostServer}/api/git/log/${ownerRepository}/${nameRepository}`);
+      console.log(response.data);
+      setLogRepo(response.data);
+      setOpen(true);
+    } else {
+      alert("input owner repository and name repository");
+    }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -180,6 +189,22 @@ function App() {
         </div>
       </ContextAPI.Provider>
       <div className={classes.left}>
+        <TextField
+          id="standard-basic"
+          label="Repository Owner"
+          onChange={(e) => {
+            console.log(ownerRepository);
+            setOwnerRepository(e.target.value);
+          }}
+        />
+        <TextField
+          id="standard-basic"
+          label="Repository Name"
+          onChange={(e) => {
+            console.log(nameRepository);
+            setNameRepository(e.target.value);
+          }}
+        />
         <Button
           variant="contained"
           color="primary"
@@ -190,6 +215,41 @@ function App() {
         >
           Refresh Lists
         </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          size="large"
+          className={classes.button}
+          startIcon={<Info />}
+          onClick={handleOpen}
+        >
+          See Commits
+        </Button>
+        <Modal
+          aria-labelledby="spring-modal-title"
+          aria-describedby="spring-modal-description"
+          className={classes.modal}
+          open={open}
+          onClose={handleClose}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+          }}
+        >
+          <Fade in={open}>
+            <div className={classes.paper}>
+              <h2 id="spring-modal-title">Git Log</h2>
+              {
+                logRepo.map(function (object, i) {
+                  return <p>
+                    {object.commit.message}
+                  </p>
+                })
+              }
+            </div>
+          </Fade>
+        </Modal>
       </div>
     </div>
   );
@@ -206,7 +266,18 @@ const useStyle = makeStyles(theme => ({
     position: 'absolute',
     right: '10%',
     bottom: '10%'
-  }
+  },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paper: {
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+  },
 }));
 
 export default App;
