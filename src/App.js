@@ -10,7 +10,7 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import axios from 'axios';
 
 function App() {
-  const hostServer = `https://trello-git-rest-api.herokuapp.com`;
+  const hostServer = `http://trello-git-rest-api.herokuapp.com`;
   const classes = useStyle();
   const [data, setData] = useState(mockData);
   const [ownerRepository, setOwnerRepository] = useState("");
@@ -33,31 +33,21 @@ function App() {
     // new uuid this card
     let newCardID = uuid();
     // create new card
-    const newCard = {
-      listId,
-      id: newCardID,
-      title,
-    };
     let result = await axios.post(`${hostServer}/api/card/create`, {
       listId,
       id: newCardID,
       title
     });
     if (result.status === 200) {
+      let response = await axios.post(`${hostServer}/api/card/rearrange`, {
+        user: ownerRepository,
+        repository: nameRepository
+      });
+      setData(response.data);
       alert("success");
     } else {
       alert("error to create card")
     }
-    // assign new card to list
-    const list = data.lists[listId];
-    list.cards = [...list.cards, newCard];
-    setData({
-      ...data,
-      lists: {
-        ...data.lists,
-        [listId]: list
-      }
-    });
   };
   const addList = async (title) => {
     const newListId = uuid();
