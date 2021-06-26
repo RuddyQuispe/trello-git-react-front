@@ -10,7 +10,7 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import axios from 'axios';
 
 function App() {
-  const hostServer = `http://trello-git-rest-api.herokuapp.com`;
+  const hostServer = `https://trello-git-rest-api.herokuapp.com`;
   const classes = useStyle();
   const [data, setData] = useState(mockData);
   const [ownerRepository, setOwnerRepository] = useState("");
