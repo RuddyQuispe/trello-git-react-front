@@ -2,14 +2,14 @@ import { Collapse, fade, makeStyles, Paper, Typography } from '@material-ui/core
 import { useState } from 'react';
 import AddCardorListText from './AddCardorListText';
 
-const AddCardorList = ({ type, listId }) => {
+const AddCardorList = ({ type, listId, index }) => {
     const [open, setOpen] = useState(true);
     const classes = useStyle();
-
+    // console.table({ table: "AddCardOrList", type, listId, index });
     return (
         <div className={classes.root}>
             <Collapse in={open}>
-                <AddCardorListText type={type} setOpen={setOpen} listId={listId} />
+                <AddCardorListText type={type} setOpen={setOpen} listId={listId} index={index} />
             </Collapse>
             <Collapse in={!open}>
                 <Paper className={classes.addCardorListText} onClick={() => setOpen(true)}>

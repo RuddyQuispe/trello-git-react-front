@@ -7,6 +7,7 @@ import TrelloCard from './TrelloCard';
 
 const TrelloList = ({ list, index }) => {
     const classes = useStyle();
+    // console.table({ table: "TReloList", list, index });
     return (
         <Draggable draggableId={list.id} index={index}>
             {
@@ -34,7 +35,7 @@ const TrelloList = ({ list, index }) => {
                                 }
                             </Droppable>
                             <AddCardorList
-                                type="card" listId={list.id}
+                                type="card" listId={list.id} index={index}
                             />
                         </Paper>
                     </div>

@@ -12,10 +12,12 @@ import axios from 'axios';
 function App() {
   const hostServer = `https://trello-git-rest-api.herokuapp.com`;
   const classes = useStyle();
-  const [data, setData] = useState(mockData);
+  let jsonMain = mockData;
+  const [data, setData] = useState(jsonMain);
   const [ownerRepository, setOwnerRepository] = useState("");
   const [nameRepository, setNameRepository] = useState("");
   const [logRepo, setLogRepo] = useState([]);
+
   const updateListTitle = (updatedTitle, listId) => {
     //actualiza el titulo de la lista
     // let list = data.lists[listId];
@@ -33,17 +35,24 @@ function App() {
     // new uuid this card
     let newCardID = uuid();
     // create new card
+    // console.table({
+    //   listId: data.listIds[listId],
+    //   id: newCardID,
+    //   title
+    // });
     let result = await axios.post(`${hostServer}/api/card/create`, {
       listId,
       id: newCardID,
       title
     });
+    console.log(result);
     if (result.status === 200) {
       let response = await axios.post(`${hostServer}/api/card/rearrange`, {
         user: ownerRepository,
         repository: nameRepository
       });
       setData(response.data);
+      console.log(response.data);
       alert("success");
     } else {
       alert("error to create card")
@@ -155,7 +164,8 @@ function App() {
                     {
                       data.listIds.map((listId, index) => {
                         // js
-                        const list = data.lists[listId]
+                        // console.table({ table: "App", listId, index });
+                        let list = data.lists[listId]
                         return <TrelloList
                           list={list}
                           key={listId}
@@ -181,7 +191,6 @@ function App() {
           id="standard-basic"
           label="Repository Owner"
           onChange={(e) => {
-            console.log(ownerRepository);
             setOwnerRepository(e.target.value);
           }}
         />
@@ -189,7 +198,6 @@ function App() {
           id="standard-basic"
           label="Repository Name"
           onChange={(e) => {
-            console.log(nameRepository);
             setNameRepository(e.target.value);
           }}
         />

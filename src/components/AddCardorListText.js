@@ -4,14 +4,15 @@ import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import ClearIcon from '@material-ui/icons/Clear';
 import contextAPI from '../ContextAPI';
 
-const AddCardorListText = ({ type, setOpen, listId }) => {
+const AddCardorListText = ({ type, setOpen, listId, index }) => {
     const [title, setTitle] = useState("");
     const classes = useStyle();
-
+    // console.log({ table: "AddCardorListText", type, setOpen, listId, index });
     const { addCard, addList } = useContext(contextAPI);
     const handleAddCardorList = () => {
+        // console.log(`index: ${index}`)
         if (type === "card") {
-            addCard(title, listId);
+            addCard(title, index);
         } else {
             addList(title);
         }
