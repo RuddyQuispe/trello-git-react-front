@@ -41,7 +41,7 @@ function App() {
     //   title
     // });
     let result = await axios.post(`${hostServer}/api/card/create`, {
-      listId,
+      listId: data.listIds[listId],
       id: newCardID,
       title
     });
